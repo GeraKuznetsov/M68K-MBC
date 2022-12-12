@@ -1,0 +1,218 @@
+typedef unsigned char u8;
+typedef char i8;
+typedef unsigned short u16;
+typedef short i16;
+typedef unsigned int u32;
+typedef int i32;
+typedef unsigned long long u64;
+typedef long long i64;
+
+//u32 from[32]= {0,1,2,3,4,5,8,9,10,11,12,13,14,15,16};
+//volatile u32 to[32];
+
+#define REG0 0b000000000000000000000000
+#define REG1 0b000100000000000000000000
+#define REG2 0b001000000000000000000000
+#define REG3 0b001100000000000000000000
+#define REG4 0b010000000000000000000000
+#define REG5 0b010100000000000000000000
+#define REG6 0b011000000000000000000000
+#define REG7 0b011100000000000000000000
+#define REG8 0b010000000000000000000000
+#define REG9 0b100100000000000000000000
+#define REGA 0b101000000000000000000000
+#define REGB 0b101100000000000000000000
+#define REGC 0b110000000000000000000000
+#define REGD 0b110100000000000000000000
+#define REGE 0b111000000000000000000000
+#define REGF 0b111100000000000000000000
+
+//volatile u16* const IO_PORT = 0b100000000000000000000000;
+//volatile u16* const VGA_PORT = 0b110000000000000000000000;
+
+volatile u16* const LCD_C = REG3;
+volatile u16* const LCD_D = ((u16*)REG3) + 1;
+
+#define DELAY 0xFFFF
+
+void writeString(u8* s){
+	*LCD_C = 0b00000010;
+	while(*s){
+	for(u16 i = DELAY; i; i--){ __asm__("nop"); } //reutnr home
+		*LCD_D = (u16)(*s);
+		for(u16 i = DELAY; i; i--){ __asm__("nop"); }
+	}
+}
+
+u8 buffer[5];
+
+int main(){ 
+	buffer[0] = 'I';
+	buffer[1] = 'N';
+	buffer[2] = 'T';
+	buffer[3] = 'I';
+	buffer[4] = 0;
+	*LCD_C = 0b00000001;
+	for(u16 i = DELAY; i; i--){ __asm__("nop"); }
+    *LCD_C = 0b00000110;
+	for(u16 i = DELAY; i; i--){ __asm__("nop"); }
+    *LCD_C = 0b00001100;
+	for(u16 i = DELAY; i; i--){ __asm__("nop"); }
+    
+	*LCD_C = 0b00000110;
+    for(u16 i = DELAY; i; i--){ __asm__("nop"); }
+    *LCD_C = 0b00001100;
+	for(u16 i = DELAY; i; i--){ __asm__("nop"); }
+    
+	writeString("Test");
+	while(1){};
+	
+    /*u16* RAMs = REG1;
+	u16* RAMe = REG2;
+	
+	for(u16* p = RAMs; p < RAMe; p++){
+		*p = 0xFFFF;
+	}
+	for(u16* p = RAMs; p < RAMe; p++){
+		if(*p != 0xFFFF) goto fail;
+	}
+	for(u16* p = RAMs; p < RAMe; p++){
+		*p = 0x0000;
+	}
+	for(u16* p = RAMs; p < RAMe; p++){
+		if(*p != 0x0000) goto fail;
+	}
+	u16 i = 0;
+    for(u16* p = RAMs; p < RAMe; p++){
+		*p = i;
+		i++;
+	}
+	i = 0;
+	for(u16* p = RAMs; p < RAMe; p++){
+		if(*p != i) goto fail;
+		i++;
+	}
+	
+	*LCD_C = 0b00000010;
+	for(u16 i = DELAY; i; i--){ __asm__("nop"); } //reutnr home
+   *LCD_D = 'O';
+	for(u16 i = DELAY; i; i--){ __asm__("nop"); }
+    *LCD_D = 'K';
+	for(u16 i = DELAY; i; i--){ __asm__("nop"); }
+	while(1) {};
+ 
+fail:
+    *LCD_D = 'F';
+	for(u16 i = DELAY; i; i--){ __asm__("nop"); }
+    *LCD_D = 'A';
+	for(u16 i = DELAY; i; i--){ __asm__("nop"); }
+    *LCD_D = 'I';
+	for(u16 i = DELAY; i; i--){ __asm__("nop"); }
+    *LCD_D = 'L';
+	for(u16 i = DELAY; i; i--){ __asm__("nop"); }
+    *LCD_D = 'L';
+	while(1) {};*/
+	
+	/*int frame = 0;
+	while(1){
+		for(int x_ = 0; x_ < 128; x_++){
+			for(int y_ = 0; y_ < 128; y_++){
+				for(int y = 0; y < 128; y++){
+				for(int x = 0; x < 128; x++){
+						VGA_PORT[(y) * 128 + (x)] = 0;
+					}
+				}
+				for(int y = 0; y < 8; y++){
+					for(int x = 0; x < 8; x++){
+						VGA_PORT[(y + y_) * 128 + (x + x_)] = x | (y << 3);
+					}
+				}
+				IO_PORT[0] = frame;
+				frame ^= 1;
+			}
+		}
+	}*/
+	return 0;
+}
+
+void __attribute__((interrupt)) I0(void)
+{
+	buffer[3] = '0';
+    writeString(buffer);
+}
+
+void __attribute__((interrupt)) I1(void)
+{
+	buffer[3] = '1';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I2(void)
+{
+	buffer[3] = '2';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I3(void)
+{
+	buffer[3] = '3';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I4(void)
+{
+	buffer[3] = '4';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I5(void)
+{
+	buffer[3] = '5';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I6(void)
+{
+	buffer[3] = '6';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I7(void)
+{
+	buffer[3] = '7';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I8(void)
+{
+	buffer[3] = '8';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I9(void)
+{
+	buffer[3] = '9';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I10(void)
+{
+	buffer[3] = 'A';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I11(void)
+{
+	buffer[3] = 'B';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I12(void)
+{
+	buffer[3] = 'C';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I13(void)
+{
+	buffer[3] = 'D';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I14(void)
+{
+	buffer[3] = 'E';
+    writeString(buffer);
+}
+void __attribute__((interrupt)) I15(void)
+{
+	buffer[3] = 'F';
+    writeString(buffer);
+}

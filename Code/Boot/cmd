@@ -1,0 +1,15 @@
+hexyl a.bin
+
+
+asm: 
+m68k-elf-as test.s
+
+to bin:
+m68k-elf-objcopy -O binary  a.out a.bin
+
+compile:
+m68k-elf-gcc -nostdlib -nodefaultlibs -m68000 test.c -c
+
+link:
+m68k-elf-ld -Ttext=0x10000 -Tdata=0x3000 -Tbss=0x4000 --section-start=.rodata=0x5000 test.o
+m68k-elf-ld -T link.txt test.o

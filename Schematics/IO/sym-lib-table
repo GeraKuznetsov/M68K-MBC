@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name "Connector")(type "Legacy")(uri "C:/Users/foobar/Desktop/68000/Schem/Lib/Connector.lib")(options "")(descr ""))
+  (lib (name "lib2")(type "KiCad")(uri "C:/Users/foobar/Desktop/68000/Schem/Lib/lib2.kicad_sym")(options "")(descr ""))
+)
