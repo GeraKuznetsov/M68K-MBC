@@ -4937,7 +4937,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid d8c8f798-fd65-43f0-b2d7-af238e4d48f1)
   )
-  (label "SYS_PORT_SPI_CE0" (at 211.836 375.412 180)
+  (label "SPI_CE0" (at 211.836 375.412 180)
     (effects (font (size 1.27 1.27)) (justify right bottom))
     (uuid d97b502e-19c1-42d4-860a-a5e7ef0c4a24)
   )

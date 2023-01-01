@@ -19,8 +19,9 @@
 _rom_base = 0;
 _rom_sz = 1M;
 _ram_base = 1M;
-_ram_sz = 1M;
+_ram_sz = 2M;
 
+/* must be mult of 16 */
 _stack_sz = 4K;
 
 /*
@@ -28,7 +29,7 @@ _stack_sz = 4K;
  * except to add user interrupt vectors.
  */
 
-STARTUP(bin/crt0.o)
+STARTUP(bin/crt/crt0.o)
 OUTPUT_ARCH(m68k)
 
 __rom_end = (_rom_base + _rom_sz);
@@ -39,11 +40,6 @@ __text_org = _rom_base + 0x400;
 __text_sz = _rom_sz - 0x400;
 __data_org = _ram_base;
 __data_sz = _ram_sz;
-
-/* Make sure stack size is a multiple of 16, and at least the amount the user
- * thought they were getting. */
-_stack_sz += 15;
-_stack_sz &= ~0xF;
 
 MEMORY {
     evt          (r!ax) : ORIGIN = __evt_org, LENGTH = 0x400
@@ -68,9 +64,9 @@ SECTIONS {
         LONG(DEFINED(Trace) ? ABSOLUTE(Trace) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(Line1010Emulator) ? ABSOLUTE(Line1010Emulator) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(Line1111Emulator) ? ABSOLUTE(Line1111Emulator) : ABSOLUTE(__DefaultInterrupt));
-        LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */
+        LONG(DEFINED(HardwareBreakpoint) ? ABSOLUTE(HardwareBreakpoint) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(CoprocessorProtocolViolation) ? ABSOLUTE(CoprocessorProtocolViolation) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FormatError) ? ABSOLUTE(FormatError) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(UninitializedInterruptVector) ? ABSOLUTE(UninitializedInterruptVector) : ABSOLUTE(__DefaultInterrupt));
         LONG(0); /* Unassigned, reserved */
         LONG(0); /* Unassigned, reserved */
@@ -104,63 +100,22 @@ SECTIONS {
         LONG(DEFINED(TRAP13) ? ABSOLUTE(TRAP13) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(TRAP14) ? ABSOLUTE(TRAP14) : ABSOLUTE(__DefaultInterrupt));
         LONG(DEFINED(TRAP15) ? ABSOLUTE(TRAP15) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPBranchOrSetUnorderedCondition) ? ABSOLUTE(FPBranchOrSetUnorderedCondition) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPInexactResult) ? ABSOLUTE(FPInexactResult) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPZeroDivide) ? ABSOLUTE(FPZeroDivide) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPUnderflow) ? ABSOLUTE(FPUnderflow) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPOperandError) ? ABSOLUTE(FPOperandError) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPOverflow) ? ABSOLUTE(FPOverflow) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPSignallingNAN) ? ABSOLUTE(FPSignallingNAN) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(FPUnimplementedDataType) ? ABSOLUTE(FPUnimplementedDataType) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(MMUConfigurationError) ? ABSOLUTE(MMUConfigurationError) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(MMUIllegalOperation) ? ABSOLUTE(MMUIllegalOperation) : ABSOLUTE(__DefaultInterrupt));
+        LONG(DEFINED(MMUAccessLevelViolation) ? ABSOLUTE(MMUAccessLevelViolation) : ABSOLUTE(__DefaultInterrupt));
         LONG(0); /* Unassigned, reserved */
         LONG(0); /* Unassigned, reserved */
         LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */     
-		LONG(0); /* Unassigned, reserved */
         LONG(0); /* Unassigned, reserved */
         LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */    
-		LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */     
-		LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */
-        LONG(0); /* Unassigned, reserved */
-		/*LONG(DEFINED(I0) ? ABSOLUTE(I0) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I1) ? ABSOLUTE(I1) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I2) ? ABSOLUTE(I2) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I3) ? ABSOLUTE(I3) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I4) ? ABSOLUTE(I4) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I5) ? ABSOLUTE(I5) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I6) ? ABSOLUTE(I6) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I7) ? ABSOLUTE(I7) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I8) ? ABSOLUTE(I8) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I9) ? ABSOLUTE(I9) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I10) ? ABSOLUTE(I10) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I11) ? ABSOLUTE(I11) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I12) ? ABSOLUTE(I12) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I13) ? ABSOLUTE(I13) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I14) ? ABSOLUTE(I14) : ABSOLUTE(__DefaultInterrupt));
-        LONG(DEFINED(I15) ? ABSOLUTE(I15) : ABSOLUTE(__DefaultInterrupt));*/
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);		
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);		
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);		
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);		
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);		
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
-		LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt); LONG(__DefaultInterrupt);
 /*
  *
  * User Interrupt Vectors
@@ -182,7 +137,7 @@ SECTIONS {
  */
     } > evt
 
-    .text : {
+   .text : {
         _text_start = .;
         *(.text .text.*)
         . = ALIGN(0x10);
@@ -211,15 +166,17 @@ SECTIONS {
         _bss_end = .;
     } > data
 
-    .heap : {
-        _heap_start = .;
-        . += (_ram_sz - _stack_sz - SIZEOF(.bss) - SIZEOF(.data));
-        _heap_end = .;
-    } > data
-
     .stack : {
         _stack_start = .;
         . += _stack_sz;
         _stack_end = .;
     } > data
+
+    .heap : {
+        _heap_start = .;
+		_HEAP_START = .;
+        /*. += (_ram_sz - _stack_sz - SIZEOF(.bss) - SIZEOF(.data));
+        _heap_end = .;*/
+    } > data
+
 }

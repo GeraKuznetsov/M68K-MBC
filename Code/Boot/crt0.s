@@ -20,7 +20,7 @@
         .globl _start
 _start:
         move.w  #0x2700, %sr            /* Mask interrupts, supervisor mode */
-
+		#jmp     main
         movea.l #_stack_end, %sp        /* Manually configure the SP value,
                                          * this allows the SP value in the ROM
                                          * image to be used e.g. to store a
@@ -49,7 +49,7 @@ _start:
 
 5:
 
-
+		and.w  #0xF8FF, %sr 
 7:      jmp     main
 		
         .type __DefaultInterrupt, @function

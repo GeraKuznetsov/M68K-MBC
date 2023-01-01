@@ -28,4 +28,4 @@ WIP code, just testing stuff, will eventually be OS
 Allows you to connect an arduino mega to the backplane and program the flash chips on the memory card in-circuit. 
 TODO: document this better
 sst39f040_inBB/avr - the arduino mega code
-sst39f040_inBB/send.py - script file to send the data
+sst39f040_inBB/send.py - script file to send the data, requires serial lib

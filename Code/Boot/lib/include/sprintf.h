@@ -1,0 +1,1 @@
+int sprintf(char *buffer, char const *fmt, ...);

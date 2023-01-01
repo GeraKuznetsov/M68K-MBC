@@ -26,61 +26,9 @@ void setup() {
   
   pinMode(RES, INPUT);
   digitalWrite(RES, LOW);
-  //pinMode(CE, OUTPUT);
 
   Serial.begin(500000);
-  Serial.println("flash 2");
-  
- /* digitalWrite(AS, LOW);
-  digitalWrite(LDS, LOW);
-  digitalWrite(UDS, LOW);
-  while(true){};*//*
-  readMode();
-    pinMode(RES, OUTPUT);
-  digitalWrite(RES, LOW);
-  delayMicroseconds(250);
-    digitalWrite(AS, HIGH);
- digitalWrite(RD_WR, HIGH);
-  digitalWrite(LDS, HIGH);
-  digitalWrite(UDS, HIGH);
-   pinMode(AS, OUTPUT);
-  pinMode(RD_WR, OUTPUT);
-  pinMode(LDS, OUTPUT);
-  pinMode(UDS, OUTPUT);
-
-
-  DDRA = DDRB = DDRC = 0xFF; // address output
-  PORTA = PORTB = PORTC = 0x00; //address low*/
-  //while(true){}
- /*for(int i = 0; i < 23; i++){
-    uint32_t add = uint32_t(1) << uint32_t(i);
-    PORTA = add & 0xFF;
-    PORTB = (add & 0xFF00) >> 8;
-    PORTC = (add >> 16) & 0xFF;
-    Serial.println(add & 0xFF);
-    Serial.println((add & 0xFF00) >> 8);
-    Serial.println((add >> 16) & 0xFF);
-    Serial.println();
-   // PORTC = 0xFF;
-     char c;
-     readChar(&c);
-  }*//*
-  writeMode();
-
-   for(int i = 0; i < 16; i++){
-    uint32_t add = uint32_t(1) << uint32_t(i);
-    PORTF = add & 0xFF;
-    PORTK = (add & 0xFF00) >> 8;
-    Serial.println(add & 0xFF);
-    Serial.println((add & 0xFF00) >> 8);
-    Serial.println();
-   // PORTC = 0xFF;
-     char c;
-     readChar(&c);
-  }*/
-  
-    Serial.println("flash 3");
-
+  Serial.println("flash");
 }
 
 const int CMD_NONE = 0;
@@ -97,41 +45,22 @@ int cmd;
 void readMode() {  
   PORTK = DDRK = PORTF = DDRF = 0;
   digitalWrite(RD_WR, HIGH);
- // Serial.print("read mode");
 }
 
 void writeMode() {  
   digitalWrite(RD_WR, LOW);
   PORTF = PORTK = 0;
   DDRF = DDRK = 0xFF;
- // Serial.print("write mode");
 }
 
 void memWrite(unsigned long add, byte dataL, byte dataH) {
-  
- /* Serial.println();
-  Serial.println(add, HEX);
-  Serial.println((add >> uint32_t(24)) & 0xFF);
-  Serial.println((add >> uint32_t(16)) & 0xFF);
-  Serial.println((add >> uint32_t(8)) & 0xFF);
-  Serial.println((add >> uint32_t(0)) & 0xFF);
-    Serial.println((add >> 24) & 0xFF);
-  Serial.println((add >> 16) & 0xFF);
-  Serial.println((add >> 8) & 0xFF);
-  Serial.println((add >> 0) & 0xFF);
-  Serial.println();
-*/
   add >>= 1UL;
   PORTF = dataH;
   PORTK = dataL;
   PORTA = add & 0xFFUL;
   PORTB = (add & 0xFF00UL) >> 8;
   PORTC = (add & 0xFF0000UL) >> 16;
-  //PORTC = 0;
-   //   Serial.println(PORTA,HEX);
-  //  Serial.println(PORTB,HEX);
-  // Serial.println(PORTC,HEX);
-  // digitalWrite(CE, LOW);
+
   digitalWrite(AS, LOW);
   digitalWrite(LDS, LOW);
   digitalWrite(UDS, LOW);
@@ -145,22 +74,15 @@ word memRead(uint32_t add) {
   add >>= uint32_t(1);
   PORTA = add & 0xFF;
   PORTB = (add & 0xFF00) >> 8;
-  //PORTC = 0;
   PORTC = (add & 0xFF0000) >> 16;
-
- //     Serial.println(PORTA);
-    //Serial.println(PORTB);
-  //    Serial.println(PORTC);
-
+  
   digitalWrite(AS, LOW);
   digitalWrite(LDS, LOW);
   digitalWrite(UDS, LOW);
-  //digitalWrite(CE, LOW);
   word out = word(PINF) | (word(PINK) << 8);
   digitalWrite(LDS, HIGH);
   digitalWrite(UDS, HIGH);
   digitalWrite(AS, HIGH);
-  //digitalWrite(CE, HIGH);
   return out;
 }
 
