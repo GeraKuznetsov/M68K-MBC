@@ -38,15 +38,8 @@ u8 SPI_SET_SPEED(u8 spd){
 	}
 }
 
- u8 SPI_SEND(u8 data){
+u8 SPI_SEND(u8 data){
 	*SPI_PORT = data;
-	__asm__("nop ");
-	__asm__("nop ");
-	if(spiSpeed){
-		for(int i = 0; i < 20; i++){
-			__asm__("nop ");
-		}		
-	}
 	return *SPI_PORT;
 }
 

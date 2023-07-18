@@ -1,8 +1,8 @@
 #include "EventQ.h"
 #include "sys.h"
 
-void EventQInit(EventQ *eq){
-	eq->write = eq->read = 0;
+void EventQInit(){
+	EventQ.write = EventQ.read = 0;
 }
 
 __attribute__((always_inline)) inline int Inc(u8 i){
@@ -10,28 +10,24 @@ __attribute__((always_inline)) inline int Inc(u8 i){
 	return i;
 }
 
-void EventQAdd(EventQ *eq, event e){
-	if(!eq) return;
-	u8 writeInc = Inc(eq->write);
-	if(writeInc == eq->read){ //drop event
-		eq->read = Inc(eq->read);
-		//panic("dropped");
+void EventQAdd(event e){
+	u8 writeInc = Inc(EventQ.write);
+	if(writeInc == EventQ.read){ //drop event
+		EventQ.read = Inc(EventQ.read);
 	}
-	eq->events[eq->write] = e;
-	eq->write = writeInc;
+	EventQ.events[EventQ.write] = e;
+	EventQ.write = writeInc;
 }
 
-event GetEvent(EventQ *eq){
-	
-	
+event GetEvent(){
 	event e = {EVENT_NONE, 0};
 	INT_E_RESET(INT_SOURCE_GLOBAL);
-	if(eq){
-		if(eq->read != eq->write){ 
-			e = eq->events[eq->read];
-			eq->read = Inc(eq->read);
-		}
+
+	if(EventQ.read != EventQ.write){ 
+		e = EventQ.events[EventQ.read];
+		EventQ.read = Inc(EventQ.read);
 	}
+
 	INT_E_SET(INT_SOURCE_GLOBAL);
 	
 	return e;

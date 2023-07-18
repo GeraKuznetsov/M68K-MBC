@@ -14,4 +14,6 @@ extern u8 PS2_KEY_DOWN[KEY_NUM_KEYS];
 
 u16 PS2_INIT();
 
-void PS2_INT();
+#define PS2_INT_RETURN_OS 1
+#define PS2_INT_RETURN_DUMP 2
+int PS2_INT();

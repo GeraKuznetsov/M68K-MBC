@@ -1,8 +1,10 @@
-typedef unsigned char uint8_t;
-typedef char int8_t;
-typedef unsigned short uint16_t;
-typedef short int16_t;
-typedef unsigned int uint32_t;
-typedef int int32_t;
-typedef unsigned long long uint64_t;
-typedef long long int64_t;
+#include <std.h>
+
+typedef u8 uint8_t;
+typedef i8 int8_t;
+typedef u16 uint16_t;
+typedef i16 int16_t;
+typedef u32 uint32_t;
+typedef i32 int32_t;
+typedef u64 uint64_t;
+typedef i64 int64_t;

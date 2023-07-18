@@ -80,9 +80,8 @@ DRESULT disk_write (
 {
 	DRESULT res;
 	int result;
-	panic("disk_write");
 
-	//return mmc_disk_write(buff, sector, count);
+	return mmc_disk_write(buff, sector, count);
 }
 
 #endif
@@ -101,7 +100,6 @@ DRESULT disk_ioctl (
 	DRESULT res;
 	int result;
 	
-panic("disk_ioctl");
-	//return mmc_disk_ioctl(cmd, buff);
+	return mmc_disk_ioctl(cmd, buff);
 }
 

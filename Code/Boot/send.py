@@ -8,7 +8,7 @@ sectorSize = 1024 * 4;
 delay = 5/1000
 
 file = "bin/OS.bin"
-com = "COM6"
+com = "COM3"
 bytes_read = open(file, "rb").read()
 print('opened file: '+ file)
 print ('useing '+ com + ' with rate of 500000')

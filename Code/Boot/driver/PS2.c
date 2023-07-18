@@ -2,8 +2,6 @@
 #include "sys.h"
 #include "EventQ.h"
 
-extern EventQ *OS_EventQ;
-
 u8 brk = 0, ext = 0;
 u8 PS2_LOCKS = 0;
 #define LOCK_CAPS 4
@@ -140,7 +138,7 @@ u16 PS2_INIT(){
 
 void panic(const char* message);
 
-void PS2_INT(){
+int PS2_INT(){
 	u8 code = READ_PS2_PORT();
 	
 	//SYS_PORT_TOGGLE(SYS_OUT_PORT_7);
@@ -155,15 +153,15 @@ void PS2_INT(){
 				PS2_SEND(PS2_LOCKS);
 				ps2CommandState = CS_IGNORE;
 			}
-			return;
+			return 0;
 		case CS_RESET:
 			if(code == 0xAA){
 				ps2CommandState = 0;
 			}
-			return;
+			return 0;
 		case CS_IGNORE:
 			ps2CommandState = 0;
-			return;
+			return 0;
 	}
 	
 	//u8 b2[] = {toHex[(code >> 4)& 0x0F], toHex[code & 0x0F], 0};
@@ -171,10 +169,10 @@ void PS2_INT(){
 	
 	if(code == 0xF0){
 		brk = 1;
-		return;
+		return 0;
 	}else if(code == 0xE0){
 		ext = 1;
-		return;
+		return 0;
 	}
 	
 	if(ext){
@@ -221,6 +219,13 @@ void PS2_INT(){
 		code = keymap[code];	
 	}
 	
+	if(brk && (code == KEY_LEFT_WIN || code == KEY_RIGHT_WIN)){
+		if(PS2_KEY_DOWN[KEY_F1]){
+			return PS2_INT_RETURN_DUMP;
+		}
+		return PS2_INT_RETURN_OS;
+	}
+	
 	if(code == 0){
 		ext = 0;
 		brk = 0;
@@ -265,7 +270,7 @@ void PS2_INT(){
 		//if(PS2_TYPED_CB) PS2_TYPED_CB(code);
 		//if(PS2_ASCII_CB){
 		event e = {EVENT_KEY_REPEAT | down, code};
-		EventQAdd(OS_EventQ, e);
+		EventQAdd(e);
 			
 			
 		if(1){
@@ -275,7 +280,7 @@ void PS2_INT(){
 				}
 
 				event e = {EVENT_ASCII_TYPED, code};
-				EventQAdd(OS_EventQ, e);
+				EventQAdd(e);
 
 			}else if(code >= KEY_0 && code <= KEY_BACK_SLASH){ //SYMBOLS
 				if(PS2_KEY_DOWN[KEY_LEFT_SHIFT] | PS2_KEY_DOWN[KEY_RIGHT_SHIFT]){
@@ -285,18 +290,15 @@ void PS2_INT(){
 				}
 				
 				event e = {EVENT_ASCII_TYPED, code};
-				EventQAdd(OS_EventQ, e);
+				EventQAdd(e);
 
 			}else if(code >= KEY_KP_0 && code <= KEY_KP_PERIOD){ //Keypad
 				code = kpsymmap[code - KEY_KP_0];
 				
 				event e = {EVENT_ASCII_TYPED, code};
-				EventQAdd(OS_EventQ, e);
+				EventQAdd(e);
 			}
 		}
-		
-
-
 		
 	}else{
 		brk = 0;
@@ -304,4 +306,5 @@ void PS2_INT(){
 		//EventQAdd(KEY_)
 		//if(PS2_BREAK_CB) PS2_BREAK_CB(code);
 	}
+	return 0;
 }

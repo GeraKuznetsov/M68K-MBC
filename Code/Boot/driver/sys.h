@@ -60,7 +60,9 @@ void INT_E_RESET(u8 mask);
 #define SPI_FAST 0
 
 u8 SPI_SET_SPEED(u8 spd);
+//__attribute__((always_inline)) u8 SPI_SEND(u8 data);
 u8 SPI_SEND(u8 data);
+//#define SPI_SEND(data) (*SPI_PORT = (data))
 
 void GPO_WRITE(u8 data);
 u8 GPO_READ();

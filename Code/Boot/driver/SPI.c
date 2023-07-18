@@ -113,7 +113,7 @@ DSTATUS mmc_disk_initialize (void)
 	Stat = STA_NOINIT;
 
 	//power_off();						/* Turn off the socket power to reset the card */
-	for(int i = 0; i < 125000; i++){	/* Wait for 100ms */
+	for(u32 i = 0; i < 125000; i++){	/* Wait for 100ms */
 		__asm__("nop ");
 	}	
 
@@ -151,7 +151,7 @@ DSTATUS mmc_disk_initialize (void)
 
 	if (ty) {			/* Initialization succeded */
 		Stat &= ~STA_NOINIT;		/* Clear STA_NOINIT */
-		//SPI_SET_SPEED(SPI_FAST);
+		SPI_SET_SPEED(SPI_FAST);
 	} else {			/* Initialization failed */
 		//power_off();
 	}
@@ -228,7 +228,38 @@ DRESULT mmc_disk_read (
 /* Miscellaneous Functions                                               */
 /*-----------------------------------------------------------------------*/
 
-#if _USE_IOCTL
+static void xmit_spi_multi (
+	const BYTE *p,	/* Data block to be sent */
+	UINT cnt		/* Size of data block */
+)
+{
+	do {
+		SPI_SEND(*p++);
+	} while (--cnt);
+}
+
+static int xmit_datablock (
+	const BYTE *buff,	/* 512 byte data block to be transmitted */
+	BYTE token			/* Data/Stop token */
+)
+{
+	BYTE resp;
+
+	if (!wait_ready(500)) return 0;		/* Leading busy check: Wait for card ready to accept data block */
+
+	SPI_SEND(token);					/* Xmit data token */
+	if (token == 0xFD) return 1;		/* Do not send data if token is StopTran */
+
+	xmit_spi_multi(buff, 512);			/* Data */
+	SPI_SEND(0xFF); SPI_SEND(0xFF);		/* Dummy CRC */
+
+	resp = SPI_SEND(0xFF);				/* Receive data resp */
+
+	return (resp & 0x1F) == 0x05 ? 1 : 0;	/* Data was accepted or not */
+
+	/* Busy check is done at next transmission */
+}
+
 DRESULT mmc_disk_ioctl (
 	BYTE cmd,		/* Control code */
 	void *buff		/* Buffer to send/receive control data */
@@ -274,9 +305,9 @@ DRESULT mmc_disk_ioctl (
 	case GET_BLOCK_SIZE :	/* Get erase block size in unit of sector (DWORD) */
 		if (CardType & CT_SDC2) {	/* SDv2? */
 			if (send_cmd(ACMD13, 0) == 0) {	/* Read SD status */
-				xchg_spi(0xFF);
+				SPI_SEND(0xFF);
 				if (rcvr_datablock(csd, 16)) {				/* Read partial block */
-					for (n = 64 - 16; n; n--) xchg_spi(0xFF);	/* Purge trailing data */
+					for (n = 64 - 16; n; n--) SPI_SEND(0xFF);	/* Purge trailing data */
 					*(DWORD*)buff = 16UL << (csd[10] >> 4);
 					res = RES_OK;
 				}
@@ -330,7 +361,7 @@ DRESULT mmc_disk_ioctl (
 
 	case MMC_GET_OCR :		/* Receive OCR as an R3 resp (4 bytes) */
 		if (send_cmd(CMD58, 0) == 0) {	/* READ_OCR */
-			for (n = 4; n; n--) *ptr++ = xchg_spi(0xFF);
+			for (n = 4; n; n--) *ptr++ = SPI_SEND(0xFF);
 			res = RES_OK;
 		}
 		deselect();
@@ -338,25 +369,25 @@ DRESULT mmc_disk_ioctl (
 
 	case MMC_GET_SDSTAT :	/* Receive SD statsu as a data block (64 bytes) */
 		if (send_cmd(ACMD13, 0) == 0) {	/* SD_STATUS */
-			xchg_spi(0xFF);
+			SPI_SEND(0xFF);
 			if (rcvr_datablock(ptr, 64)) res = RES_OK;
 		}
 		deselect();
 		break;
 
-	case CTRL_POWER_OFF :	/* Power off */
+	/*case CTRL_POWER_OFF :	/* Power off 
 		power_off();
 		Stat |= STA_NOINIT;
 		res = RES_OK;
-		break;
+		break;*/
 #if _USE_ISDIO
 	case ISDIO_READ:
 		sdi = buff;
 		if (send_cmd(CMD48, 0x80000000 | (DWORD)sdi->func << 28 | (DWORD)sdi->addr << 9 | ((sdi->ndata - 1) & 0x1FF)) == 0) {
-			for (Timer1 = 100; (rc = xchg_spi(0xFF)) == 0xFF && Timer1; ) ;
+			for (Timer1 = 100; (rc = SPI_SEND(0xFF)) == 0xFF && Timer1; ) ;
 			if (rc == 0xFE) {
-				for (bp = sdi->data, dc = sdi->ndata; dc; dc--) *bp++ = xchg_spi(0xFF);
-				for (dc = 514 - sdi->ndata; dc; dc--) xchg_spi(0xFF);
+				for (bp = sdi->data, dc = sdi->ndata; dc; dc--) *bp++ = SPI_SEND(0xFF);
+				for (dc = 514 - sdi->ndata; dc; dc--) SPI_SEND(0xFF);
 				res = RES_OK;
 			}
 		}
@@ -366,10 +397,10 @@ DRESULT mmc_disk_ioctl (
 	case ISDIO_WRITE:
 		sdi = buff;
 		if (send_cmd(CMD49, 0x80000000 | (DWORD)sdi->func << 28 | (DWORD)sdi->addr << 9 | ((sdi->ndata - 1) & 0x1FF)) == 0) {
-			xchg_spi(0xFF); xchg_spi(0xFE);
-			for (bp = sdi->data, dc = sdi->ndata; dc; dc--) xchg_spi(*bp++);
-			for (dc = 514 - sdi->ndata; dc; dc--) xchg_spi(0xFF);
-			if ((xchg_spi(0xFF) & 0x1F) == 0x05) res = RES_OK;
+			SPI_SEND(0xFF); SPI_SEND(0xFE);
+			for (bp = sdi->data, dc = sdi->ndata; dc; dc--) SPI_SEND(*bp++);
+			for (dc = 514 - sdi->ndata; dc; dc--) SPI_SEND(0xFF);
+			if ((SPI_SEND(0xFF) & 0x1F) == 0x05) res = RES_OK;
 		}
 		deselect();
 		break;
@@ -377,10 +408,10 @@ DRESULT mmc_disk_ioctl (
 	case ISDIO_MRITE:
 		sdi = buff;
 		if (send_cmd(CMD49, 0x84000000 | (DWORD)sdi->func << 28 | (DWORD)sdi->addr << 9 | sdi->ndata >> 8) == 0) {
-			xchg_spi(0xFF); xchg_spi(0xFE);
-			xchg_spi(sdi->ndata);
-			for (dc = 513; dc; dc--) xchg_spi(0xFF);
-			if ((xchg_spi(0xFF) & 0x1F) == 0x05) res = RES_OK;
+			SPI_SEND(0xFF); SPI_SEND(0xFE);
+			SPI_SEND(sdi->ndata);
+			for (dc = 513; dc; dc--) SPI_SEND(0xFF);
+			if ((SPI_SEND(0xFF) & 0x1F) == 0x05) res = RES_OK;
 		}
 		deselect();
 		break;
@@ -391,51 +422,7 @@ DRESULT mmc_disk_ioctl (
 
 	return res;
 }
-#endif
 
-/* Send a data block fast */
-static
-void xmit_spi_multi (
-	const BYTE *p,	/* Data block to be sent */
-	UINT cnt		/* Size of data block */
-)
-{
-	do {
-		SPI_SEND(*p++);
-	} while (cnt--);
-}
-
-#if	_USE_WRITE
-static
-int xmit_datablock (
-	const BYTE *buff,	/* 512 byte data block to be transmitted */
-	BYTE token			/* Data/Stop token */
-)
-{
-	BYTE resp;
-
-
-	if (!wait_ready(500)) return 0;		/* Leading busy check: Wait for card ready to accept data block */
-
-	xchg_spi(token);					/* Xmit data token */
-	if (token == 0xFD) return 1;		/* Do not send data if token is StopTran */
-
-	xmit_spi_multi(buff, 512);			/* Data */
-	xchg_spi(0xFF); xchg_spi(0xFF);		/* Dummy CRC */
-
-	resp = xchg_spi(0xFF);				/* Receive data resp */
-
-	return (resp & 0x1F) == 0x05 ? 1 : 0;	/* Data was accepted or not */
-
-	/* Busy check is done at next transmission */
-}
-#endif
-
-/*-----------------------------------------------------------------------*/
-/* Write Sector(s)                                                       */
-/*-----------------------------------------------------------------------*/
-
-#if _USE_WRITE
 DRESULT mmc_disk_write (
 	const BYTE *buff,	/* Pointer to the data to be written */
 	LBA_t sector,		/* Start sector number (LBA) */
@@ -447,7 +434,7 @@ DRESULT mmc_disk_write (
 
 	if (!count) return RES_PARERR;
 	if (Stat & STA_NOINIT) return RES_NOTRDY;
-	if (Stat & STA_PROTECT) return RES_WRPRT;
+	//if (Stat & STA_PROTECT) return RES_WRPRT;
 
 	if (!(CardType & CT_BLOCK)) sect *= 512;	/* Convert to byte address if needed */
 
@@ -471,4 +458,3 @@ DRESULT mmc_disk_write (
 
 	return count ? RES_ERROR : RES_OK;
 }
-#endif

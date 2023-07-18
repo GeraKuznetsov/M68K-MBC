@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fat/ff.h"
+#include <ff.h>
 #include "fat/diskio.h"
 
 DSTATUS mmc_disk_initialize (void);
